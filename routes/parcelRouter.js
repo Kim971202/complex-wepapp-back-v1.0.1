@@ -62,7 +62,10 @@ router.get("/getParcelList", async (req, res, next) => {
     //조회문 생성
     let sql = `SELECT idx as idx, ROW_NUMBER() OVER(ORDER BY idx) AS No,  DATE_FORMAT(arrival_time, '%Y-%m-%d %h:%i:%s') AS startTime, 
                       IFNULL(DATE_FORMAT(receive_time, '%Y-%m-%d %h:%i:%s'), "    -  -  ") AS receiveTime,
-                      dong_code AS dongCode, ho_code AS hoCode, parcel_flag AS parcelFlag, parcel_status AS parcelStatus, 
+                      dong_code AS dongCode, ho_code AS hoCode, parcel_flag AS parcelFlag, 
+                      (CASE  WHEN parcel_status = '0' THEN '미수령'
+                             WHEN parcel_status = '1' THEN '수령'
+                             WHEN parcel_status = '2' THEN '반품' ELSE '-' END) AS parcelStatus, 
                       IFNULL(memo, 'Empty Memo') AS parcelCorp, send_result AS sendResult
                FROM t_delivery
                WHERE 1=1 `;
