@@ -49,15 +49,15 @@ router.get("/getParcelList", async (req, res, next) => {
   let _parcelFlag = "%";
 
   if (parcelStatus === "미수령") _parcelStatus = "0";
-  else if (parcelStatus === "수령") _parcelStatusg = "1";
+  else if (parcelStatus === "수령") _parcelStatus = "1";
   else if (parcelStatus === "반품") _parcelStatus = "2";
 
   console.log("parcelStatus_=>" + _parcelFlag);
 
   try {
     let sql2 = `SELECT count(*) as cnt 
-    FROM t_delivery 
-    WHERE 1=1 `;
+                FROM t_delivery 
+                WHERE 1=1 `;
 
     //조회문 생성
     let sql = `SELECT idx as idx, ROW_NUMBER() OVER(ORDER BY idx) AS No,  DATE_FORMAT(arrival_time, '%Y-%m-%d %h:%i:%s') AS startTime, 
@@ -151,8 +151,9 @@ router.get("/getParcelList", async (req, res, next) => {
  * 택배 상세조회
  ***************************************************/
 
-router.get("/getDetailedParcelList", async (req, res, next) => {
-  let { idx = "", parcelStatus = "" } = req.query;
+router.get("/getDetailedParcelList/:idx", async (req, res, next) => {
+  // let { idx = "", parcelStatus = "" } = req.query;
+  let { idx = "" } = req.query;
   console.log(idx);
   try {
     const detailsql = `SELECT DATE_FORMAT(arrival_time, '%Y-%m-%d %h:%i:%s') AS arrivalTime, parcel_status AS parcelStatus, 
@@ -160,17 +161,37 @@ router.get("/getDetailedParcelList", async (req, res, next) => {
                        FROM t_delivery
                        WHERE idx = ?`;
 
-    const data = await pool.query(detailsql, [idx, parcelStatus]);
+    // const data = await pool.query(detailsql, [idx, parcelStatus]);
+    const data = await pool.query(detailsql, [idx]);
 
     console.log("Detailsql: " + detailsql);
 
-    let resultList = data[0];
+    let arrivalTime = "";
+    let parcelStatus = "";
+    let dongCode = "";
+    let hoCode = "";
+    let memo = "";
+
+    resultList = data[0];
+
+    console.log("data[0] :" + data[0]);
+
+    if (resultList.length > 0) {
+      arrivalTime = resultList[0].arrivalTime;
+      parcelStatus = resultList[0].parcelStatus;
+      dongCode = resultList[0].dongCode;
+      hoCode = resultList[0].hoCode;
+      memo = resultList[0].memo;
+    }
+
     let jsonResult = {
       resultCode: "00",
       resultMsg: "NORMAL_SERVICE",
-      data: {
-        resultList,
-      },
+      arrivalTime,
+      parcelStatus,
+      dongCode,
+      hoCode,
+      memo,
     };
 
     return res.json(jsonResult);
