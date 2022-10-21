@@ -16,6 +16,7 @@ const inoutCarRoute = require("./routes/inoutCarRouter");
 const elevatorRoute = require("./routes/elevatorRouter");
 const parkingRoute = require("./routes/parkingRouter");
 const parcelRoute = require("./routes/parcelRouter");
+const keyContractRoute = require("./routes/keyContractRouter");
 
 // ********************************************************
 
@@ -47,6 +48,7 @@ app.use("/inoutCar", inoutCarRoute);
 app.use("/elevator", elevatorRoute);
 app.use("/parking", parkingRoute);
 app.use("/parcel", parcelRoute);
+app.use("/keyContract", keyContractRoute);
 
 // ********************************************************
 
