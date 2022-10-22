@@ -111,6 +111,7 @@ router.get("/getParcelList", async (req, res, next) => {
 
     //조건문 취합
     sql += BasicCondition;
+
     const data2 = await pool.query(sql2);
 
     totalCount = data2[0][0].cnt; //총 게시글 수

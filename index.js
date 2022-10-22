@@ -17,6 +17,7 @@ const elevatorRoute = require("./routes/elevatorRouter");
 const parkingRoute = require("./routes/parkingRouter");
 const parcelRoute = require("./routes/parcelRouter");
 const keyContractRoute = require("./routes/keyContractRouter");
+const complaintRoute = require("./routes/complaintRouter");
 
 // ********************************************************
 
@@ -49,6 +50,7 @@ app.use("/elevator", elevatorRoute);
 app.use("/parking", parkingRoute);
 app.use("/parcel", parcelRoute);
 app.use("/keyContract", keyContractRoute);
+app.use("/complaint", complaintRoute);
 
 // ********************************************************
 
