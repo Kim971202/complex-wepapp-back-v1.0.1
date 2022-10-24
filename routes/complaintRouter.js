@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const pool = require("../DB/dbPool");
+const pool = require("../database/pool");
 
 /****************************************************
  * 민원 목록 조회
@@ -8,6 +8,7 @@ const pool = require("../DB/dbPool");
 
 router.get("/getApplicationList", async (req, res, next) => {
   let {
+    // serviceKey = "111111111", // 서비스 인증키
     page = 1, //             현재페이지
     size = 10, //        페이지 당 결과수
     startDate = "",
@@ -34,18 +35,29 @@ router.get("/getApplicationList", async (req, res, next) => {
   let start_page = 1;
   let end_page = block;
 
+  let _progressStatus = "%";
+
+  if (progressStatus === "취소") _progressStatus = "0";
+  else if (progressStatus === "신청") _progressStatus = "1";
+  else if (progressStatus === "접수") _progressStatus = "2";
+  else if (progressStatus === "완료") _progressStatus = "3";
+
+  console.log("_progressStatus=>" + _progressStatus);
+
   try {
     let sql2 = `SELECT count(*) as cnt 
     FROM t_application_complaint 
     WHERE 1=1 `;
 
     //조회문 생성
-    let sql = `SELECT idx as idx, ROW_NUMBER() OVER(ORDER BY idx) AS No, app_title AS appTilte, DATE_FORMAT(app_date, '%Y-%m-%d') AS appDate, 
-                      app_code AS appCode app_method AS appMethod,
-                    
-                    dong_code AS dongCode, ho_code AS hoCode, progress_status AS progressStatus,
-                    IFNULL(DATE_FORMAT(app_receipt_date, '%Y-%m-%d'), "    -  -  ") AS appReceiptDate,
-                    IFNULL(DATE_FORMAT(app_complete_date, '%Y-%m-%d'), "    -  -  ") AS appCompleteDate,
+    let sql = `SELECT idx as idx, ROW_NUMBER() OVER(ORDER BY idx) AS No, DATE_FORMAT(app_date, '%Y-%m-%d') AS appDate, 
+                      dong_code AS dongCode, ho_code AS hoCode, app_method AS appMethod,
+                      IFNULL(DATE_FORMAT(app_receipt_date, '%Y-%m-%d'), "    -  -  ") AS appReceiptDate,
+                      IFNULL(DATE_FORMAT(app_complete_date, '%Y-%m-%d'), "    -  -  ") AS appCompleteDate,
+                      (CASE WHEN progress_status = '0' THEN '취소' 
+                            WHEN progress_status = '1' THEN '신청' 
+                            WHEN progress_status = '2' THEN '접수' 
+                            WHEN progress_status = '3' THEN '완료' ELSE '-' END) AS progressStatus
               FROM t_application_complaint
               WHERE 1=1 `;
 
@@ -53,15 +65,6 @@ router.get("/getApplicationList", async (req, res, next) => {
 
     //기존 조건 조회문 생성
     let BasicCondition = "";
-
-    let progressStatus_ = "%";
-
-    if (progressStatus === "취소") progressStatus_ = "0";
-    else if (progressStatus === "신청") progressStatus_ = "1";
-    else if (progressStatus === "접수") progressStatus_ = "2";
-    else if (progressStatus === "완료") progressStatus_ = "3";
-
-    console.log("progressStatus_=>" + progressStatus_);
 
     // let contractTitleCondition = `LIKE '${contractTitle}%'`;
     if (startDate) {
@@ -80,7 +83,7 @@ router.get("/getApplicationList", async (req, res, next) => {
 
     if (progressStatus) {
       //접수 상태 조회는 개별 독립 조건
-      BasicCondition += `AND progress_status = '${progressStatus_}'`;
+      BasicCondition += `AND progress_status = '${_progressStatus}'`;
     }
 
     if (dongCode) {
@@ -122,8 +125,6 @@ router.get("/getApplicationList", async (req, res, next) => {
 
     const data = await pool.query(sql, [Number(start), Number(end)]);
 
-    console.log("resultList: " + resultList);
-
     let list = data[0];
 
     let jsonResult = {
@@ -141,15 +142,19 @@ router.get("/getApplicationList", async (req, res, next) => {
  * 민원 목록 상세보기
  ***************************************************/
 
-router.get("/getDetailedApplicationList", async (req, res, next) => {
-  let { idx = "" } = req.query;
+router.get("/getDetailedApplicationList/:idx", async (req, res, next) => {
+  let { idx = "" } = req.params;
   console.log(idx);
   try {
-    const detailsql = `SELECT DATE_FORMAT(app_date, '%Y-%m-%d %h:%i:%s') AS complaintAppDate, a.app_code AS appCategory, 
+    const detailsql = `SELECT DATE_FORMAT(app_date, '%Y-%m-%d %h:%i:%s') AS appDate, a.app_code AS appCategory, 
                               app_content AS appContent, CONCAT(dong_code, "동", ho_code, "호") AS applicant, app_method AS appMethod,
                               IFNULL(DATE_FORMAT(app_receipt_date, '%Y-%m-%d'), "    -  -  ") AS appReceiptDate,
                               IFNULL(DATE_FORMAT(app_complete_date, '%Y-%m-%d'), "    -  -  ") AS appCompleteDate,
-                              progress_status AS progressStatus, IFNULL(b.memo, " ") AS memo
+                              (CASE  WHEN progress_status = '0' THEN '취소'
+                                     WHEN progress_status = '1' THEN '신청'
+                                     WHEN progress_status = '2' THEN '접수' 
+                                     WHEN progress_status = '3' THEN '완료' ELSE '-' END)  AS progressStatus,
+                                     IFNULL(b.memo, " ") AS memo
                       FROM t_application_complaint a
                       INNER JOIN t_complaints_type b
                       WHERE a.app_code = b.app_code and a.idx = ?`;
@@ -158,13 +163,44 @@ router.get("/getDetailedApplicationList", async (req, res, next) => {
 
     console.log("Detailsql: " + detailsql);
 
-    let resultList = data[0];
+    let appDate = "";
+    let appCode = "";
+    let appContent = "";
+    let applicant = "";
+    let appMethod = "";
+    let appReceiptDate = "";
+    let appCompleteDate = "";
+    let progressStatus = "";
+    let memo = "";
+
+    resultList = data[0];
+
+    console.log("data[0] :" + data[0]);
+
+    if (resultList.length > 0) {
+      appDate = resultList[0].appDate;
+      appCode = resultList[0].appCode;
+      appContent = resultList[0].appContent;
+      applicant = resultList[0].applicant;
+      appMethod = resultList[0].appMethod;
+      appReceiptDate = resultList[0].appReceiptDate;
+      appCompleteDate = resultList[0].appCompleteDate;
+      progressStatus = resultList[0].progressStatus;
+      memo = resultList[0].memo;
+    }
+
     let jsonResult = {
       resultCode: "00",
       resultMsg: "NORMAL_SERVICE",
-      data: {
-        resultList,
-      },
+      appDate,
+      appCode,
+      appContent,
+      applicant,
+      appMethod,
+      appReceiptDate,
+      appCompleteDate,
+      progressStatus,
+      memo,
     };
 
     return res.json(jsonResult);
@@ -184,25 +220,74 @@ router.get("/getDetailedApplicationList", async (req, res, next) => {
  *  0: 취소   1: 신청   2: 접수   3: 처리
  * ****************************************/
 
-router.put("/updateComplaint", async (req, res, next) => {
-  let { idx = 0, progressStatus = 0 } = req.body;
+router.patch("/updateComplaint/:idx", async (req, res, next) => {
+  let { idx = "", progressStatus = 0 } = req.body;
   console.log(idx, progressStatus);
 
-  try {
-    const sql = `UPDATE t_application_complaint SET progress_status = ? WHERE idx = ?`;
-    console.log("sql: " + sql);
+  if (progressStatus === "취소") progressStatus = "0";
+  else if (progressStatus === "신청") progressStatus = "1";
+  else if (progressStatus === "접수") progressStatus = "2";
+  else if (progressStatus === "완료") progressStatus = "3";
 
-    const data = await pool.query(sql, [progressStatus, idx]);
-    // console.log(data[0]);
-    let jsonResult = {
-      resultCode: "00",
-      resultMsg: "NORMAL_SERVICE",
-    };
+  let resultCode = "00";
+  if (idx === 0) resultCode = "10";
 
-    return res.json(jsonResult);
-  } catch (error) {
-    return res.status(500).json(error);
-  }
+  if (progressStatus === "") resultCode = "10";
+
+  console.log("resultCode=> " + resultCode);
+
+  if (resultCode === "00") {
+    try {
+      const sql = `UPDATE t_application_complaint 
+                   SET progress_status = ? 
+                   WHERE idx = ? `;
+      console.log("sql: " + sql);
+
+      const data = await pool.query(sql, [progressStatus, idx]);
+      // console.log(data[0]);
+      let jsonResult = {
+        resultCode: resultCode,
+        resultMsg: "글이 수정되었습니다.",
+        idx,
+      };
+
+      return res.json(jsonResult);
+    } catch (error) {
+      return res.status(500).json(error);
+    }
+  } else return res.json({ resultCode: resultCode });
+});
+
+/****************************************************
+ * 민원 관리 삭제
+ ***************************************************/
+
+router.delete("/deleteComplaint/:idx", async (req, res, next) => {
+  let { idx = 0 } = req.params;
+  console.log(idx);
+
+  let resultCode = "00";
+  if (idx === 0) resultCode = "10";
+
+  console.log("resultCode=> " + resultCode);
+
+  if (resultCode === "00") {
+    try {
+      const sql = `DELETE FROM t_application_complaint WHERE idx = ?`;
+      console.log("sql: " + sql);
+
+      const data = await pool.query(sql, [idx]);
+      console.log(data[0]);
+
+      let jsonResult = {
+        resultCode: resultCode,
+        resultMsg: "글이 삭제되었습니다.",
+      };
+      return res.json(jsonResult);
+    } catch (error) {
+      return res.status(500).json(error);
+    }
+  } else return res.json({ resultCode: resultCode });
 });
 
 module.exports = router;

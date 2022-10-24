@@ -112,7 +112,7 @@ router.get("/getKeyContract", async (req, res, next) => {
  * 주요 연락처 등록
  ***************************************************/
 
-router.post("/uploadkeyContract", async (req, res, next) => {
+router.post("/uploadKeyContract", async (req, res, next) => {
   let {
     contractFlag = "",
     facilityName = "",
@@ -121,33 +121,44 @@ router.post("/uploadkeyContract", async (req, res, next) => {
   } = req.body;
   console.log(contractFlag, facilityName, phoneNum, memo);
 
-  try {
-    const sql = `INSERT INTO t_key_contact(phone_num, contact_flag, facility_name, memo, insert_dtime)
+  let resultCode = "00";
+  if (contractFlag === "") resultCode = "10";
+
+  if (facilityName === "") resultCode = "10";
+
+  if (phoneNum === "") resultCode = "10";
+
+  console.log("resultCode=> " + resultCode);
+
+  if (resultCode === "00") {
+    try {
+      const sql = `INSERT INTO t_key_contact(phone_num, contact_flag, facility_name, memo, insert_dtime)
                  VALUES(?, ?, ?, ?, now())`;
-    const data = await pool.query(sql, [
-      phoneNum,
-      contractFlag,
-      facilityName,
-      memo,
-    ]);
-    console.log("data[0]=>" + data[0]);
+      const data = await pool.query(sql, [
+        phoneNum,
+        contractFlag,
+        facilityName,
+        memo,
+      ]);
+      console.log("data[0]=>" + data[0]);
 
-    let jsonResult = {
-      resultCode: "00",
-      resultMsg: "NORMAL_SERVICE",
-    };
+      let jsonResult = {
+        resultCode: resultCode,
+        resultMsg: "글이 등록되었습니다.",
+      };
 
-    return res.json(jsonResult);
-  } catch (error) {
-    return res.status(500).json(error);
-  }
+      return res.json(jsonResult);
+    } catch (error) {
+      return res.status(500).json(error);
+    }
+  } else return res.json({ resultCode: resultCode });
 });
 
 /****************************************************
  * 주요 연락처 수정
  ***************************************************/
 
-router.put("/updateKeyContract", async (req, res, next) => {
+router.patch("/updateKeyContract/:idx", async (req, res, next) => {
   let {
     idx = 0,
     contractFlag = "",
@@ -157,50 +168,71 @@ router.put("/updateKeyContract", async (req, res, next) => {
   } = req.body;
   console.log(idx, contractFlag, facilityName, phoneNum, memo);
 
-  try {
-    const sql = `UPDATE t_key_contact SET contact_flag = ?, facility_name = ?, phone_num = ?, memo = ? WHERE idx = ?`;
-    console.log("sql: " + sql);
-    const data = await pool.query(sql, [
-      contractFlag,
-      facilityName,
-      phoneNum,
-      memo,
-      idx,
-    ]);
+  let resultCode = "00";
+  if (idx === 0) resultCode = "10";
 
-    let jsonResult = {
-      resultCode: "00",
-      resultMsg: "NORMAL_SERVICE",
-    };
+  if (contractFlag === "") resultCode = "10";
+  if (facilityName === "") facilityName = "10";
+  if (phoneNum === "") phoneNum = "10";
 
-    return res.json(jsonResult);
-  } catch (error) {
-    return res.status(500).json(error);
-  }
+  console.log("resultCode=> " + resultCode);
+
+  if (resultCode === "00") {
+    try {
+      const sql = `UPDATE t_key_contact 
+                   SET contact_flag = ?, facility_name = ?, phone_num = ?, insert_dtime = now(), memo = ? 
+                   WHERE idx = ?`;
+      console.log("sql: " + sql);
+      const data = await pool.query(sql, [
+        contractFlag,
+        facilityName,
+        phoneNum,
+        memo,
+        idx,
+      ]);
+
+      let jsonResult = {
+        resultCode: resultCode,
+        resultMsg: "글이 수정되었습니다.",
+        idx,
+      };
+
+      return res.json(jsonResult);
+    } catch (error) {
+      return res.status(500).json(error);
+    }
+  } else return res.json({ resultCode: resultCode });
 });
 
 /****************************************************
  * 주요 연락처 삭제
  ***************************************************/
 
-router.delete("/deleteKeyContract", async (req, res, next) => {
-  let { idx = 0 } = req.body;
+router.delete("/deleteKeyContract/:idx", async (req, res, next) => {
+  let { idx = 0 } = req.params;
   console.log(idx);
 
-  try {
-    const sql = `DELETE FROM t_key_contact WHERE idx = ?`;
-    console.log("sql: " + sql);
-    const data = await pool.query(sql, [idx]);
+  let resultCode = "00";
+  if (idx === 0) resultCode = "10";
 
-    let jsonResult = {
-      resultCode: "00",
-      resultMsg: "NORMAL_SERVICE",
-    };
+  console.log("resultCode=> " + resultCode);
 
-    return res.json(jsonResult);
-  } catch (error) {
-    return res.status(500).json(error);
-  }
+  if (resultCode === "00") {
+    try {
+      const sql = `DELETE FROM t_key_contact WHERE idx = ?`;
+      console.log("sql: " + sql);
+      const data = await pool.query(sql, [idx]);
+
+      let jsonResult = {
+        resultCode: "00",
+        resultMsg: "연락처가 삭제되었습니다.",
+      };
+
+      return res.json(jsonResult);
+    } catch (error) {
+      return res.status(500).json(error);
+    }
+  } else return res.json({ resultCode: resultCode });
 });
 
 module.exports = router;

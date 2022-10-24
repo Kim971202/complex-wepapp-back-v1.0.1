@@ -219,6 +219,10 @@ router.post("/uploadParcel", async (req, res, next) => {
 
   console.log(arrivalTime, parcelStatus, dongCode, hoCode, memo);
 
+  if (parcelStatus === "미수령") _parcelStatus = "0";
+  else if (parcelStatus === "수령") _parcelStatus = "1";
+  else if (parcelStatus === "반품") _parcelStatus = "2";
+
   let resultCode = "00";
   if (arrivalTime === "") resultCode = "10";
 
@@ -232,31 +236,20 @@ router.post("/uploadParcel", async (req, res, next) => {
 
   if (resultCode === "00") {
     try {
-      parcelBoxNo = "00";
-      mailBoxNo = "0";
-      receiver = `${dongCode} - ${hoCode}`;
-      del_fee = "0";
-      // parcelFlag = "유인";
-
-      let sql = `INSERT INTO t_delivery(arrival_time, parcel_box_no, mail_box_no, receiver, del_fee, 
-                                      dong_code, ho_code, receive_time, parcel_status, parcel_flag, user_id, send_time, send_result, memo)
-               VALUES(DATE_FORMAT(?,"%y-%m-%d"),?,?,?,?,?,?,now(),?,'유인','경비실',now(),'Y',?)`;
+      let sql = `INSERT INTO t_delivery(arrival_time, parcel_box_no, mail_box_no, 
+                                      dong_code, ho_code, parcel_status, parcel_flag, user_id, memo)
+               VALUES(DATE_FORMAT(?,"%y-%m-%d"), 99, 99, ?, ?, ?, '유인', '경비실', ?) `;
       const data = await pool.query(sql, [
         arrivalTime, // 도착일시
-        parcelBoxNo, // 택배함 번호
-        mailBoxNo, // 보관함 번호
-        receiver, // 수신자
-        del_fee, // 택배비
         dongCode,
         hoCode,
-        parcelStatus, // 택배 상태 0: 미수령(택배도착), 1: 수령, 2: 반품
-        // parcelFlag,       // 택배 구분 '무인': 무인택배, '경비': 경비실기, 'PC': 관리자 PC
+        _parcelStatus, // 택배 상태 0: 미수령(택배도착), 1: 수령, 2: 반품
         memo,
       ]);
       console.log("data[0]=>" + data[0]);
 
       let jsonResult = {
-        resultCode: resulCode,
+        resultCode: resultCode,
         resultMsg: "글이 등록되었습니다.",
       };
 
@@ -264,7 +257,7 @@ router.post("/uploadParcel", async (req, res, next) => {
     } catch (error) {
       return res.status(500).json(error);
     }
-  }
+  } else return res.json({ resultCode: resultCode });
 });
 /****************************************************
  * 택배 정보 수정 - 수령여부 변경
