@@ -118,7 +118,7 @@ router.get("/getContractDocList", async (req, res, next) => {
  ***************************************************/
 
 router.get("/getDetailedContractDocList/:idx", async (req, res, next) => {
-  let { idx = "" } = req.query;
+  let { idx = "" } = req.params;
   console.log(idx);
 
   try {
@@ -215,31 +215,78 @@ router.get("/getDetailedContractDocList/:idx", async (req, res, next) => {
  * 계약 자료 수정
  ***************************************************/
 
-// router.post("/updateContract", async (req, res, next) => {
-//   let { idx = "", contractTitle = "", contractDesc = "" } = req.body;
+router.patch("/updateContractDoc/:idx", async (req, res, next) => {
+  let {
+    idx = "",
+    contractTitle = "",
+    contractDate = "",
+    contractContent = "",
+  } = req.body;
 
-//   console.log(idx, contractTitle, contractDesc);
+  console.log(idx, contractTitle, contractDate, contractContent);
 
-//   try {
-//     const editsql = `SELECT contract_title AS contracTitle, contract_content AS contractDesc FROM t_contract_document
-//                   WHERE idx = ?`;
-//     console.log("editsql: " + editsql);
-//     const data = await pool.query(editsql, [idx]);
+  let resultCode = "00";
+  if (idx === 0) resultCode = "10";
 
-//     if (!contractTitle) contractTitle = data[0][0].contracTitle;
-//     if (!contractDesc) contractDesc = data[0][0].contractDesc;
+  if (contractTitle === "") resultCode = "10";
+  if (contractDate === "") resultCode = "10";
+  if (contractContent === "") resultCode = "10";
 
-//     const sql = `UPDATE t_contract_document SET contract_title = ?, contract_content = ? WHERE idx = ?`;
-//     console.log("sql: " + sql);
-//     const data1 = await pool.query(sql, [contractTitle, contractDesc, idx]);
-//     let jsonResult = {
-//       resultCode: "00",
-//       resultMsg: "NORMAL_SERVICE",
-//     };
-//     return res.json(jsonResult);
-//   } catch (error) {
-//     return res.status(500).json(error);
-//   }
-// });
+  console.log("resultCode=> " + resultCode);
+
+  if (resultCode === "00") {
+    try {
+      const editsql = `SELECT contract_title AS contracTitle, contract_content AS contractContent,
+                              contract_date AS contractDate
+                       FROM t_contract_document
+                       WHERE idx = ?`;
+      console.log("editsql: " + editsql);
+      const data = await pool.query(editsql, [idx]);
+
+      if (!contractTitle) contractTitle = data[0][0].contracTitle;
+      if (!contractContent) contractContent = data[0][0].contractContent;
+
+      const sql = `UPDATE t_contract_document SET contract_title = ?, contract_content = ?, contract_date =?
+                   WHERE idx = ?`;
+      console.log("sql: " + sql);
+      const data1 = await pool.query(sql, [
+        contractTitle,
+        contractContent,
+        contractDate,
+        idx,
+      ]);
+      let jsonResult = {
+        resultCode: resultCode,
+        resultMsg: "수정되었습니다.",
+        idx,
+      };
+      return res.json(jsonResult);
+    } catch (error) {
+      return res.status(500).json(error);
+    }
+  } else return res.json({ resultCode: resultCode });
+});
+
+/****************************************************
+ * 계약자료 삭제
+ ***************************************************/
+
+router.delete("/deleteContractDoc/:idx", async (req, res, next) => {
+  let { idx = 0 } = req.params;
+  console.log(idx);
+
+  try {
+    const sql = `DELETE FROM t_contract_document WHERE idx = ?`;
+    console.log("sql: " + sql);
+    const data = await pool.query(sql, [idx]);
+    let jsonResult = {
+      resultCode: "00",
+      resultMsg: "NORMAL_SERVICE",
+    };
+    return res.json(jsonResult);
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+});
 
 module.exports = router;

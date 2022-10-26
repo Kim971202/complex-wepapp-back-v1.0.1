@@ -198,7 +198,7 @@ router.get("/getDetailedParkingLocationList/:idx", async (req, res, next) => {
  ***************************************************/
 
 router.delete("/deleteCarLocationList", async (req, res, next) => {
-  let { idx = 0 } = req.body;
+  let { idx = 0 } = req.params;
   console.log(idx);
 
   try {
