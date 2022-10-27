@@ -8,8 +8,8 @@ const pool = require("../database/pool");
 router.get("/getCarIOList", async (req, res, next) => {
   let {
     // serviceKey = "111111111", // 서비스 인증키
-    size = 10, //           페이지 당 결과수
     page = 1, //               페이지 번호
+    size = 10, //           페이지 당 결과수
     startTime = "",
     endTime = "",
     dongCode = "",
@@ -20,8 +20,8 @@ router.get("/getCarIOList", async (req, res, next) => {
 
   console.log(
     // serviceKey,
-    size,
     page,
+    size,
     startTime,
     endTime,
     dongCode,
@@ -43,21 +43,21 @@ router.get("/getCarIOList", async (req, res, next) => {
   let start_page = 1;
   let end_page = block;
 
-  try {
-    let sql2 = `SELECT count(*) as cnt 
-                FROM t_parking_io 
-                WHERE 1=1 `;
+  if (sendResult === "성공") _sendResult = "Y";
+  else if (sendResult === "실패") _sendResult = "N";
 
+  try {
     //조회문 생성
-    let sql = `SELECT ROW_NUMBER() OVER(ORDER BY idx DESC) AS No, DATE_FORMAT(inout_dtime, '%Y-%m-%d %h:%i:%s') AS inoutDtime, 
+    sql = `SELECT ROW_NUMBER() OVER(ORDER BY idx DESC) AS No, DATE_FORMAT(inout_dtime, '%Y-%m-%d %h:%i:%s') AS inoutDtime, 
                         inout_flag AS inoutFlag, dong_code AS dongCode, ho_code AS hoCode, car_no AS carNumber, 
-                        DATE_FORMAT(send_time, '%Y-%m-%d %h:%i:%s') AS sendTime, send_result AS sendResult
+                        DATE_FORMAT(send_time, '%Y-%m-%d %h:%i:%s') AS sendTime, 
+                        (CASE WHEN send_result = 'Y' THEN '성공'
+                              WHEN send_result = 'N' THEN '실패' ELSE '실패' END) AS sendResult
                FROM t_parking_io
                WHERE 1=1 `;
 
-    console.log("sql: " + sql);
-
     //기존 조건 조회문 생성
+
     let BasicCondition = "";
     let carNo = ` LIKE '%${carNumber}%'`;
 
@@ -87,7 +87,7 @@ router.get("/getCarIOList", async (req, res, next) => {
 
     if (sendResult) {
       // 통신결과(세대알림) 개별 독립 조건
-      BasicCondition += `AND send_result = '${sendResult}'`;
+      BasicCondition += `AND send_result = '${_sendResult}'`;
     }
 
     if (carNumber) {
@@ -100,6 +100,10 @@ router.get("/getCarIOList", async (req, res, next) => {
     //조건문 취합
     sql += BasicCondition;
 
+    let sql2 = `SELECT count(*) as cnt 
+    FROM t_parking_io 
+    WHERE 1=1 `;
+    console.log("sql2: " + sql2);
     const data2 = await pool.query(sql2);
 
     totalCount = data2[0][0].cnt; //총 게시글 수

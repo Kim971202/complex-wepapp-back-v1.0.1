@@ -46,13 +46,16 @@ router.get("/getParcelList", async (req, res, next) => {
   let start_page = 1;
   let end_page = block;
 
-  let _parcelFlag = "%";
+  // let _parcelFlag = "%";
+
+  if (sendResult === "성공") _sendResult = "Y";
+  else if (sendResult === "실패") _sendResult = "N";
 
   if (parcelStatus === "미수령") _parcelStatus = "0";
   else if (parcelStatus === "수령") _parcelStatus = "1";
   else if (parcelStatus === "반품") _parcelStatus = "2";
 
-  console.log("parcelStatus_=>" + _parcelFlag);
+  // console.log("_parcelStatus=>" + _parcelStatus);
 
   try {
     let sql2 = `SELECT count(*) as cnt 
@@ -60,13 +63,15 @@ router.get("/getParcelList", async (req, res, next) => {
                 WHERE 1=1 `;
 
     //조회문 생성
-    let sql = `SELECT idx as idx, ROW_NUMBER() OVER(ORDER BY idx) AS No,  DATE_FORMAT(arrival_time, '%Y-%m-%d %h:%i:%s') AS startTime, 
+    let sql = `SELECT idx AS idx, ROW_NUMBER() OVER(ORDER BY idx) AS No,  DATE_FORMAT(arrival_time, '%Y-%m-%d %h:%i:%s') AS arrivalTime, 
                       IFNULL(DATE_FORMAT(receive_time, '%Y-%m-%d %h:%i:%s'), "    -  -  ") AS receiveTime,
                       dong_code AS dongCode, ho_code AS hoCode, parcel_flag AS parcelFlag, 
                       (CASE  WHEN parcel_status = '0' THEN '미수령'
                              WHEN parcel_status = '1' THEN '수령'
                              WHEN parcel_status = '2' THEN '반품' ELSE '-' END) AS parcelStatus, 
-                      IFNULL(memo, '-') AS parcelCorp, send_result AS sendResult
+                      IFNULL(memo, '-') AS parcelCorp,
+                      (CASE  WHEN send_result = 'Y' THEN '성공'
+                             WHEN send_result = 'N' THEN '실패' ELSE '실패' END) AS sendResult
                FROM t_delivery
                WHERE 1=1 `;
 
@@ -104,7 +109,7 @@ router.get("/getParcelList", async (req, res, next) => {
     }
     if (sendResult) {
       // 통신 결과 알림결과로 구분 Y or N
-      BasicCondition += `AND send_result = '${sendResult}`;
+      BasicCondition += `AND send_result = '${_sendResult}`;
     }
 
     BasicCondition += ` ORDER BY idx DESC LIMIT ?, ? `;
@@ -157,13 +162,13 @@ router.get("/getDetailedParcelList/:idx", async (req, res, next) => {
   let { idx = "" } = req.params;
   console.log(idx);
   try {
-    const detailsql = `SELECT DATE_FORMAT(arrival_time, '%Y-%m-%d %h:%i:%s') AS arrivalTime, 
+    const detailsql = `SELECT idx AS idx, DATE_FORMAT(arrival_time, '%Y-%m-%d %h:%i:%s') AS arrivalTime, 
                               (CASE  WHEN parcel_status = '0' THEN '미수령'
                                      WHEN parcel_status = '1' THEN '수령'
                                      WHEN parcel_status = '2' THEN '반품' ELSE '-' END)  AS parcelStatus, 
                               dong_code AS dongCode, ho_code AS hoCode, IFNULL(memo, " ") AS memo
                        FROM t_delivery
-                       WHERE idx = ?`;
+                       WHERE idx = ? `;
 
     // const data = await pool.query(detailsql, [idx, parcelStatus]);
     const data = await pool.query(detailsql, [idx]);
@@ -211,7 +216,7 @@ router.get("/getDetailedParcelList/:idx", async (req, res, next) => {
 router.post("/uploadParcel", async (req, res, next) => {
   let {
     arrivalTime = "",
-    parcelStatus = 0,
+    parcelStatus = "미수령",
     dongCode = "",
     hoCode = "",
     memo = "", // 경비 직접 등록 시 택배사로 입력
@@ -283,7 +288,7 @@ router.patch("/updateParcel/:idx", async (req, res, next) => {
   if (resultCode === "00") {
     try {
       const sql = `UPDATE t_delivery
-                   SET parcel_status = ?
+                   SET parcel_status = ?, receive_time = now() 
                    WHERE idx = ? `;
       // const sql = `UPDATE t_delivery
       // SET parcel_status = ?'0' THEN '미수령'

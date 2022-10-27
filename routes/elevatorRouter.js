@@ -48,15 +48,26 @@ router.get("/getElevatorCallLog", async (req, res, next) => {
   let start_page = 1;
   let end_page = block;
 
+  if (elvDirection === "상향") _elvDirection = "U";
+  else if (elvDirection === "하향") _elvDirection = "D";
+
+  if (commResult === "성공") _commResult2 = "Y";
+  else if (commResult === "실패") _commResult2 = "N";
+
   try {
     let sql2 = `SELECT count(*) as cnt 
     FROM t_elevator_control 
     WHERE 1=1 `;
 
     //조회문 생성
-    let sql = `SELECT ROW_NUMBER() OVER(ORDER BY idx DESC) AS No, DATE_FORMAT(control_req_dtime, '%Y-%m-%d %h:%i:%s') AS controlReqDTime, req_method AS reqMethod,
-                      direction, dong_code AS dongCode, ho_code AS hoCode, DATE_FORMAT(comm_dtime, '%h:%i:%s') AS commDTime,
-                      comm_result AS commResult
+    let sql = `SELECT ROW_NUMBER() OVER(ORDER BY idx DESC) AS No, DATE_FORMAT(control_req_dtime, '%Y-%m-%d %h:%i:%s') AS controlReqDTime, 
+                      direction, dong_code AS dongCode, ho_code AS hoCode, DATE_FORMAT(comm_dtime, '%Y-%m-%d %h:%i:%s') AS commDTime,
+                      (CASE WHEN req_method = 'W' THEN '월패드'
+                            WHEN req_method = 'S' THEN '스마트폰APP' ELSE '기타' END) AS reqMethod,
+                      (CASE WHEN direction = 'U' THEN '상향'
+                            WHEN direction = 'D' THEN '하향' ELSE '실패' END) AS elvDirection,
+                      (CASE WHEN comm_result = 'Y' THEN '성공'
+                            WHEN comm_result = 'N' THEN '실패' ELSE '실패' END) AS commResult
                FROM t_elevator_control
                WHERE 1=1 `;
 
@@ -86,12 +97,12 @@ router.get("/getElevatorCallLog", async (req, res, next) => {
 
     if (elvDirection) {
       //elvDirection(제어방향)은 개별 독립 조건
-      BasicCondition += `AND direction = '${elvDirection}'`;
+      BasicCondition += `AND direction = '${_elvDirection}'`;
     }
 
     if (commResult) {
       //commResul(통신상태)는 개별 독립 조건
-      BasicCondition += `AND comm_result = '${commResult}'`;
+      BasicCondition += `AND comm_result = '${_commResult}'`;
     }
 
     if (dongCode) {

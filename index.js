@@ -8,7 +8,8 @@ const port = 9000;
 const memberapi = require("./routes/memberapi");
 const vuebbsRoute = require("./routes/vuebbs-route");
 const boardapi = require("./routes/boardapi");
-
+// ********************************************************
+const donghoInfoRoute = require("./routes/donghoInfo-route");
 // ********************************************************
 // 추가
 
@@ -45,6 +46,8 @@ app.use("/members", memberapi);
 app.use("/vueboard", vuebbsRoute);
 app.use("/boards", boardapi);
 
+// ********************************************************
+app.use("/donghoInfo", donghoInfoRoute);
 // ********************************************************
 // 추가
 app.use("/inoutCar", inoutCarRoute);
