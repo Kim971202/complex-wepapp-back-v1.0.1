@@ -35,14 +35,14 @@ router.get("/getApplicationList", async (req, res, next) => {
   let start_page = 1;
   let end_page = block;
 
-  let _progressStatus = "%";
+  // let _progressStatus = "%";
 
   if (progressStatus === "취소") _progressStatus = "0";
   else if (progressStatus === "신청") _progressStatus = "1";
   else if (progressStatus === "접수") _progressStatus = "2";
   else if (progressStatus === "완료") _progressStatus = "3";
 
-  console.log("_progressStatus=>" + _progressStatus);
+  // console.log("_progressStatus=>" + _progressStatus);
 
   try {
     let sql2 = `SELECT count(*) as cnt 
@@ -150,10 +150,10 @@ router.get("/getDetailedApplicationList/:idx", async (req, res, next) => {
                               app_content AS appContent, CONCAT(dong_code, "동", ho_code, "호") AS applicant, app_method AS appMethod,
                               IFNULL(DATE_FORMAT(app_receipt_date, '%Y-%m-%d'), "    -  -  ") AS appReceiptDate,
                               IFNULL(DATE_FORMAT(app_complete_date, '%Y-%m-%d'), "    -  -  ") AS appCompleteDate,
-                              (CASE  WHEN progress_status = '0' THEN '취소'
-                                     WHEN progress_status = '1' THEN '신청'
-                                     WHEN progress_status = '2' THEN '접수' 
-                                     WHEN progress_status = '3' THEN '완료' ELSE '-' END)  AS progressStatus,
+                              (CASE  WHEN a.progress_status = '0' THEN '취소'
+                                     WHEN a.progress_status = '1' THEN '신청'
+                                     WHEN a.progress_status = '2' THEN '접수' 
+                                     WHEN a.progress_status = '3' THEN '완료' ELSE '-' END)  AS progressStatus,
                                      IFNULL(b.memo, " ") AS memo
                       FROM t_application_complaint a
                       INNER JOIN t_complaints_type b
@@ -224,10 +224,10 @@ router.patch("/updateComplaint/:idx", async (req, res, next) => {
   let { idx = "", progressStatus = 0 } = req.body;
   console.log(idx, progressStatus);
 
-  if (progressStatus === "취소") progressStatus = "0";
-  else if (progressStatus === "신청") progressStatus = "1";
-  else if (progressStatus === "접수") progressStatus = "2";
-  else if (progressStatus === "완료") progressStatus = "3";
+  if (progressStatus === "취소") _progressStatus = "0";
+  else if (progressStatus === "신청") _progressStatus = "1";
+  else if (progressStatus === "접수") _progressStatus = "2";
+  else if (progressStatus === "완료") _progressStatus = "3";
 
   let resultCode = "00";
   if (idx === 0) resultCode = "10";
@@ -239,11 +239,11 @@ router.patch("/updateComplaint/:idx", async (req, res, next) => {
   if (resultCode === "00") {
     try {
       const sql = `UPDATE t_application_complaint 
-                   SET progress_status = ? 
+                   SET progress_status = ?
                    WHERE idx = ? `;
       console.log("sql: " + sql);
 
-      const data = await pool.query(sql, [progressStatus, idx]);
+      const data = await pool.query(sql, [_progressStatus, idx]);
       // console.log(data[0]);
       let jsonResult = {
         resultCode: resultCode,

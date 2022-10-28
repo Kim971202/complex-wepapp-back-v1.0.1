@@ -54,7 +54,9 @@ router.get("/getParkingResv", async (req, res, next) => {
     let sql = `SELECT resv_no as idx, ROW_NUMBER() OVER(ORDER BY resv_no) AS No, dong_code AS dongCode, ho_code AS hoCode, car_no AS carNumber, 
                         DATE_FORMAT(vis_start_date, '%Y-%m-%d') AS visitStartDate,
                         DATE_FORMAT(vis_end_date, '%Y-%m-%d') AS visitEndDate,
-                        resv_method AS resvMethod, inout_flag AS inoutFlag
+                        (CASE WHEN resv_method = 'W' THEN '월패드'
+                              WHEN resv_method = 'S' THEN '스마트폰APP' ELSE '기타' END) AS resvMethod,
+                        inout_flag AS inoutFlag
                 FROM t_parking_resv
                 WHERE 1=1 `;
 
@@ -76,6 +78,16 @@ router.get("/getParkingResv", async (req, res, next) => {
       BasicCondition += `AND DATE(vis_start_date) <= '${endDate}'`;
     } else {
       BasicCondition += `AND DATE(vis_start_date) <= "3000-12-31"`;
+    }
+
+    if (dongCode) {
+      // 동과 호는 개별 독립 조건
+      BasicCondition += `AND dong_code = '${dongCode}'`;
+    }
+
+    if (hoCode) {
+      // 동과 호는 개별 독립 조건
+      BasicCondition += `AND ho_code = '${hoCode}'`;
     }
 
     if (carNumber) {

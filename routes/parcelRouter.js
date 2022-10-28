@@ -47,7 +47,6 @@ router.get("/getParcelList", async (req, res, next) => {
   let end_page = block;
 
   // let _parcelFlag = "%";
-
   if (sendResult === "성공") _sendResult = "Y";
   else if (sendResult === "실패") _sendResult = "N";
 
@@ -58,12 +57,12 @@ router.get("/getParcelList", async (req, res, next) => {
   // console.log("_parcelStatus=>" + _parcelStatus);
 
   try {
-    let sql2 = `SELECT count(*) as cnt 
+    let sql2 = `SELECT count(*) AS cnt 
                 FROM t_delivery 
                 WHERE 1=1 `;
 
     //조회문 생성
-    let sql = `SELECT idx AS idx, ROW_NUMBER() OVER(ORDER BY idx) AS No,  DATE_FORMAT(arrival_time, '%Y-%m-%d %h:%i:%s') AS arrivalTime, 
+    let sql = `SELECT idx AS idx, ROW_NUMBER() OVER(ORDER BY idx) AS No, DATE_FORMAT(arrival_time, '%Y-%m-%d %h:%i:%s') AS arrivalTime, 
                       IFNULL(DATE_FORMAT(receive_time, '%Y-%m-%d %h:%i:%s'), "    -  -  ") AS receiveTime,
                       dong_code AS dongCode, ho_code AS hoCode, parcel_flag AS parcelFlag, 
                       (CASE  WHEN parcel_status = '0' THEN '미수령'
@@ -105,11 +104,11 @@ router.get("/getParcelList", async (req, res, next) => {
     }
     if (parcelStatus) {
       // 택배 수령 여부 전체, 0=미수령(택배도착), 1=수령, 2=반품
-      BasicCondition += `AND parcel_Status = '${_parcelstatus}`;
+      BasicCondition += `AND parcel_Status = '${_parcelStatus}'`;
     }
     if (sendResult) {
       // 통신 결과 알림결과로 구분 Y or N
-      BasicCondition += `AND send_result = '${_sendResult}`;
+      BasicCondition += `AND send_result = '${_sendResult}'`;
     }
 
     BasicCondition += ` ORDER BY idx DESC LIMIT ?, ? `;
