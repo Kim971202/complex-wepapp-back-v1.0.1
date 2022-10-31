@@ -238,9 +238,29 @@ router.patch("/updateComplaint/:idx", async (req, res, next) => {
 
   if (resultCode === "00") {
     try {
-      const sql = `UPDATE t_application_complaint 
-                   SET progress_status = ?
-                   WHERE idx = ? `;
+      // const sql = `UPDATE t_application_complaint
+      //              SET progress_status = ?,
+      //              ( CASE WHEN progress_status = 0 THEN app_cancel_date = now()
+      //                     WHEN progress_status = 2 THEN app_receipt_date = now()
+      //                     WHEN progress_status = 3 THEN app_complete_date = now()
+      //                     ELSE '- -' END)
+      //              WHERE idx = ? `;
+
+      let sql = "";
+      if (_progressStatus == 0) {
+        sql += `UPDATE t_application_complaint
+                           SET progress_status = ?, app_cancel_date = now()
+                           WHERE idx = ? `;
+      } else if (_progressStatus == 2) {
+        sql += `UPDATE t_application_complaint
+                           SET progress_status = ?, app_receipt_date = now()
+                           WHERE idx = ? `;
+      } else if (_progressStatus == 3) {
+        sql += `UPDATE t_application_complaint
+                           SET progress_status = ?, app_complete_date = now()
+                           WHERE idx = ? `;
+      }
+
       console.log("sql: " + sql);
 
       const data = await pool.query(sql, [_progressStatus, idx]);

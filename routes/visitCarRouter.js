@@ -55,7 +55,7 @@ router.get("/getParkingResv", async (req, res, next) => {
                         DATE_FORMAT(vis_start_date, '%Y-%m-%d') AS visitStartDate,
                         DATE_FORMAT(vis_end_date, '%Y-%m-%d') AS visitEndDate,
                         (CASE WHEN resv_method = 'W' THEN '월패드'
-                              WHEN resv_method = 'S' THEN '스마트폰APP' ELSE '기타' END) AS resvMethod,
+                              WHEN resv_method = 'S' THEN '스마트폰APP' ELSE '관리실' END) AS resvMethod,
                         inout_flag AS inoutFlag
                 FROM t_parking_resv
                 WHERE 1=1 `;
@@ -220,13 +220,14 @@ router.post("/uploadParkingResv", async (req, res, next) => {
   console.log(visitDate, carNumber, dongCode, hoCode);
 
   let resultCode = "00";
-  if (visitDate === "") resultCode = "10";
-
-  if (carNumber === "") resultCode = "10";
 
   if (dongCode === "") resultCode = "10";
 
   if (hoCode === "") resultCode = "10";
+
+  if (visitDate === "") resultCode = "10";
+
+  if (carNumber === "") resultCode = "10";
 
   console.log("resultCode=> " + resultCode);
 

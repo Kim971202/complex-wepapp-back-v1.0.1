@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
+const { upload, checkUploadType } = require("../common/fileUpload");
 const pool = require("../database/pool");
-// const { upload } = require("../modules/fileUpload");
-// const { getServerIp } = require("../modules/ipSearch");
+var path = require("path");
 
 /****************************************************
  * 계약 자료 목록 조회
@@ -18,7 +18,14 @@ router.get("/getContractDocList", async (req, res, next) => {
     contractTitle = "",
   } = req.query;
 
-  console.log(size, page, startDate, endDate, contractTitle);
+  console.log(
+    // serviceKey,
+    size,
+    page,
+    startDate,
+    endDate,
+    contractTitle
+  );
 
   // if ((await checkServiceKeyResult(serviceKey)) == false) {
   //   return res.json({
@@ -169,47 +176,45 @@ router.get("/getDetailedContractDocList/:idx", async (req, res, next) => {
  * 계약 자료 등록
  ***************************************************/
 
-// router.post(
-//   "/uploadContract",
-//   upload.single("file"),
-//   async (req, res, next) => {
-//     let {
-//       contractTitle = "",
-//       contractDate = "",
-//       contractContent = "",
-//     } = req.body;
+router.post("/uploadContract", async (req, res, next) => {
+  let {
+    contractTitle = "",
+    contractDate = "",
+    contractContent = "",
+  } = req.body;
 
-//     let fileName = req.file.originalname;
-//     let filePath =
-//       `http://${getServerIp()}:3000/` + req.file.destination + fileName;
+  // let fileName = req.file.originalname;
+  // let filePath =
+  //   `http://${getServerIp()}:9000/` + req.file.destination + fileName;
 
-//     console.log(fileName);
+  // console.log(fileName);
 
-//     try {
-//       const sql = `INSERT INTO t_contract_document(contract_date, contract_title, contract_content, file_path, insert_dtime, user_id, file_name)
-//                    VALUES(DATE_FORMAT(?,"%y-%m-%d"),?,?,?,now(),?,?)`;
-//       console.log("sql: " + sql);
-//       const data = await pool.query(sql, [
-//         contractTitle,
-//         contractDate,
-//         contractContent,
-//         // userID,
-//         fileName,
-//         filePath,
-//       ]);
+  try {
+    const sql = `INSERT INTO t_contract_document(contract_date, contract_title, contract_content, insert_dtime, user_id)
+    VALUES(DATE_FORMAT(?,"%y-%m-%d"), ?, ?, now(), '관리자')`;
+    // const sql = `INSERT INTO t_contract_document(contract_date, contract_title, contract_content, file_path, insert_dtime, user_id, file_name)
+    //                VALUES(DATE_FORMAT(?,"%y-%m-%d"),?,?,?,now(),?,?)`;
+    console.log("sql: " + sql);
+    const data = await pool.query(sql, [
+      contractDate,
+      contractTitle,
+      contractContent,
+      // userID,
+      // fileName,
+      // filePath,
+    ]);
 
-//       console.log(data[0]);
+    console.log(data[0]);
 
-//       let jsonResult = {
-//         resultCode: "00",
-//         resultMsg: "NORMAL_SERVICE",
-//       };
-//       return res.json(jsonResult);
-//     } catch (error) {
-//       return res.status(500).json(error);
-//     }
-//   }
-// );
+    let jsonResult = {
+      resultCode: "00",
+      resultMsg: "NORMAL_SERVICE",
+    };
+    return res.json(jsonResult);
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+});
 
 /****************************************************
  * 계약 자료 수정
