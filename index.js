@@ -21,6 +21,8 @@ const keyContractRoute = require("./routes/keyContractRouter");
 const complaintRoute = require("./routes/complaintRouter");
 const visitCarRoute = require("./routes/visitCarRouter");
 const contractDocRoute = require("./routes/contractDocRouter");
+const noticeRoute = require("./routes/noticeRouter");
+
 const fileUploadRouter = require("./common/fileUpload");
 // ********************************************************
 
@@ -58,6 +60,7 @@ app.use("/keyContract", keyContractRoute);
 app.use("/complaint", complaintRoute);
 app.use("/visitCar", visitCarRoute);
 app.use("/contractDoc", contractDocRoute);
+app.use("/notice", noticeRoute);
 app.use("/fileUpload", fileUploadRouter);
 // ********************************************************
 
