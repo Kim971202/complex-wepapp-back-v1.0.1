@@ -43,6 +43,9 @@ router.get("/getCarIOList", async (req, res, next) => {
   let start_page = 1;
   let end_page = block;
 
+  let strSQL = "";
+  let BasicCondition = "";
+
   if (sendResult === "성공") _sendResult = "Y";
   else if (sendResult === "실패") _sendResult = "N";
 
@@ -98,16 +101,19 @@ router.get("/getCarIOList", async (req, res, next) => {
     BasicCondition += ` ORDER BY idx DESC LIMIT ?, ? `;
 
     //조건문 취합
+
     sql += BasicCondition;
 
-    let sql2 = `SELECT count(*) as cnt 
+    sql2 = `SELECT count(*) AS cnt 
     FROM t_parking_io 
     WHERE 1=1 `;
     console.log("sql2: " + sql2);
     const data2 = await pool.query(sql2);
 
     totalCount = data2[0][0].cnt; //총 게시글 수
+    console.log(totalCount);
     total_page = Math.ceil(totalCount / size); //총 페이지 수
+    console.log(total_page);
 
     start = (page - 1) * size; //시작행
     start_page = page - ((page - 1) % block);

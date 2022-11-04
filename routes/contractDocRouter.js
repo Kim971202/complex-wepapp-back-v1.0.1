@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { upload, checkUploadType } = require("../common/fileUpload");
 const pool = require("../database/pool");
-var path = require("path");
+
+let { checkUploadType, deleteFile, listDir } = require("../common/fileUpload");
 
 /****************************************************
  * 계약 자료 목록 조회
@@ -183,6 +183,11 @@ router.post("/uploadContract", async (req, res, next) => {
     contractContent = "",
   } = req.body;
 
+  console.log(contractTitle, contractDate, contractContent);
+
+  console.log(await listDir());
+  let filePath = "public/contractDoc/" + (await listDir());
+
   // let fileName = req.file.originalname;
   // let filePath =
   //   `http://${getServerIp()}:9000/` + req.file.destination + fileName;
@@ -190,21 +195,28 @@ router.post("/uploadContract", async (req, res, next) => {
   // console.log(fileName);
 
   try {
-    const sql = `INSERT INTO t_contract_document(contract_date, contract_title, contract_content, insert_dtime, user_id)
-    VALUES(DATE_FORMAT(?,"%y-%m-%d"), ?, ?, now(), '관리자')`;
-    // const sql = `INSERT INTO t_contract_document(contract_date, contract_title, contract_content, file_path, insert_dtime, user_id, file_name)
-    //                VALUES(DATE_FORMAT(?,"%y-%m-%d"),?,?,?,now(),?,?)`;
+    // const sql = `INSERT INTO t_contract_document(contract_date, contract_title, contract_content, insert_dtime, user_id)
+    // VALUES(DATE_FORMAT(?,"%y-%m-%d"), ?, ?, now(), '관리자')`;
+
+    let sql = `INSERT INTO t_contract_document(contract_date, contract_title, contract_content, file_path, insert_dtime, user_id, file_name)
+                   VALUES(DATE_FORMAT('${contractDate}', "%y-%m-%d"), '${contractTitle}', '${contractContent}', '${filePath}', now(), '관리자', '${await listDir()}') `;
     console.log("sql: " + sql);
-    const data = await pool.query(sql, [
-      contractDate,
-      contractTitle,
-      contractContent,
-      // userID,
-      // fileName,
-      // filePath,
-    ]);
+    // const data = await pool.query(sql, [
+    //   contractDate,
+    //   contractTitle,
+    //   contractContent,
+    //   // userID,
+    //   fileName,
+    //   // filePath,
+    // ]);
+
+    const data = await pool.query(sql);
 
     console.log(data[0]);
+    // 제일 최근에 추가된 공지사항의 idx값을 불러온다
+    let getIdxSQL = `SELECT idx as idx FROM t_contract_document ORDER BY idx DESC LIMIT 1`;
+    const getIdx = await pool.query(getIdxSQL);
+    console.log("getIdx: " + getIdx[0][0].idx);
 
     let jsonResult = {
       resultCode: "00",

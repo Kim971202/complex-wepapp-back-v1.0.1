@@ -23,7 +23,7 @@ const visitCarRoute = require("./routes/visitCarRouter");
 const contractDocRoute = require("./routes/contractDocRouter");
 const noticeRoute = require("./routes/noticeRouter");
 
-const fileUploadRouter = require("./common/fileUpload");
+const fileUploadRouter = require("./common/commonApi");
 // ********************************************************
 
 const corsOptions = {

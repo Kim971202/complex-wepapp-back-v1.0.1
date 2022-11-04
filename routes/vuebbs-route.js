@@ -38,7 +38,9 @@ router.get("/list", async (req, res, next) => {
     const data = await pool.query(sql);
     //console.log(data[0][0]);
     totalCount = data[0][0].cnt; //총 게시글 수
+    console.log(totalCount);
     total_page = Math.ceil(totalCount / size); //총 페이지 수
+    console.log(total_page);
 
     ////start = (page - 1) * 10;
     // start = (page - 1) * size;
@@ -73,7 +75,7 @@ router.get("/list", async (req, res, next) => {
 
     //let jsonResult = { success: true, list: list, paging: paging };
     let jsonResult = { resultCode: "00", list: list, paging: paging };
-    console.log(jsonResult);
+    // console.log(jsonResult);
 
     return res.json(jsonResult);
   } catch (err) {
