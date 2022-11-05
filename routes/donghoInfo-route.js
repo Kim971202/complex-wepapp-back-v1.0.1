@@ -281,10 +281,10 @@ router.patch("/write", async (req, res, next) => {
 //동정보 콤보박스
 router.get("/dongList", async (req, res, next) => {
   try {
-    let sql = "select dong_code as code, dong_code as name from t_dong";
-    console.log("sql=>" + sql);
+    let dongsql = "select dong_code as code, dong_code as name from t_dong";
+    console.log("dongsql=>" + dongsql);
 
-    const data = await pool.query(sql);
+    const data = await pool.query(dongsql);
     let items = data[0];
     let jsonResult = { items };
 
@@ -300,13 +300,13 @@ router.get("/donghoList", async (req, res, next) => {
   console.log("dongCode=>" + dongCode);
 
   try {
-    let sql =
+    let hosql =
       "select ho_code as code, ho_code as name from t_dongho where dong_code ='" +
       dongCode +
       "'";
-    console.log("sql=>" + sql);
+    console.log("sql=>" + hosql);
 
-    const data = await pool.query(sql);
+    const data = await pool.query(hosql);
     let items = data[0];
     let jsonResult = { items };
 
