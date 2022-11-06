@@ -91,10 +91,15 @@ router.get("/getNoticeList", async (req, res, next) => {
       BasicCondition += `AND a.noti_title = '${notiTitle}'`;
     }
 
-    BasicCondition += ` ORDER BY idx DESC LIMIT ?, ? `;
+    // BasicCondition += ` ORDER BY idx DESC LIMIT ?, ? `;
 
     //조건문 취합
     sql += BasicCondition;
+
+    sql += ` ORDER BY idx DESC LIMIT ?, ? `;
+
+    //조회 갯수 생성용 조건문
+    sql2 += BasicCondition;
 
     const data2 = await pool.query(sql2);
 

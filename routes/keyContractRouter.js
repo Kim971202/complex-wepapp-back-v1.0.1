@@ -46,7 +46,7 @@ router.get("/getKeyContract", async (req, res, next) => {
 
     let sql2 = `SELECT count(*) as cnt 
                 FROM t_key_contact 
-                WHERE 1=1 `;
+                WHERE contact_flag IN ('${_contractFlag}') `;
 
     //조회문 생성
     let sql = `SELECT idx as idx, ROW_NUMBER() OVER(ORDER BY idx) AS No, contact_flag AS contractFlag, 

@@ -43,13 +43,17 @@ router.get("/getCarIOList", async (req, res, next) => {
   let start_page = 1;
   let end_page = block;
 
-  let strSQL = "";
-  let BasicCondition = "";
+  // let strSQL = "";
+  // let BasicCondition = "";
 
   if (sendResult === "성공") _sendResult = "Y";
   else if (sendResult === "실패") _sendResult = "N";
 
   try {
+    sql2 = `SELECT count(*) AS cnt 
+                FROM t_parking_io 
+                WHERE 1=1 `;
+
     //조회문 생성
     sql = `SELECT idx AS idx, ROW_NUMBER() OVER(ORDER BY idx DESC) AS No, DATE_FORMAT(inout_dtime, '%Y-%m-%d %h:%i:%s') AS inoutDtime, 
                         inout_flag AS inoutFlag, dong_code AS dongCode, ho_code AS hoCode, car_no AS carNumber, 
@@ -67,87 +71,87 @@ router.get("/getCarIOList", async (req, res, next) => {
 
     if (startTime) {
       //startDate가 존재할때만 where 조건 생성
-      BasicCondition += ` AND DATE(inout_dtime) >= '${startTime}'`;
+      BasicCondition += ` AND DATE(inout_dtime) >= '${startTime}' `;
     } else {
-      BasicCondition += ` AND DATE(inout_dtime) >= "1900-01-01 00:00:00"`;
+      BasicCondition += ` AND DATE(inout_dtime) >= "1900-01-01 00:00:00" `;
     }
 
     if (endTime) {
       //endDate가 존재할때만 where 조건 생성
-      BasicCondition += ` AND DATE(inout_dtime) <= '${endTime}'`;
+      BasicCondition += ` AND DATE(inout_dtime) <= '${endTime}' `;
     } else {
-      BasicCondition += ` AND DATE(inout_dtime) <= "3000-12-31 00:00:00"`;
+      BasicCondition += ` AND DATE(inout_dtime) <= "3000-12-31 00:00:00" `;
     }
 
     if (dongCode) {
       // 동과 호는 개별 독립 조건
-      BasicCondition += ` AND dong_code = '${dongCode}'`;
+      BasicCondition += ` AND dong_code = '${dongCode}' `;
     }
 
     if (hoCode) {
       // 동과 호는 개별 독립 조건
-      BasicCondition += ` AND ho_code = '${hoCode}'`;
+      BasicCondition += ` AND ho_code = '${hoCode}' `;
     }
 
     if (sendResult) {
       // 통신결과(세대알림) 개별 독립 조건
-      BasicCondition += ` AND send_result = '${_sendResult}'`;
+      BasicCondition += ` AND send_result = '${_sendResult}' `;
     }
 
     if (carNumber) {
       // 차량번호 개별 독립 조건
-      BasicCondition += ` AND car_no ${carNo}`;
+      BasicCondition += ` AND car_no ${carNo} `;
     }
 
-    BasicCondition += ` ORDER BY idx DESC LIMIT ?, ? `;
+    // BasicCondition += ` ORDER BY idx DESC LIMIT ?, ? `;
 
     //조건문 취합
-
     sql += BasicCondition;
 
-    let sql2 = `SELECT count(*) AS cnt 
-    FROM t_parking_io 
-    WHERE 1=1 `;
+    sql += ` ORDER BY idx DESC LIMIT ?, ? `;
 
-    let BasicCondition2 = "";
+    //조회 갯수 생성용 조건문
+    sql2 += BasicCondition;
 
-    if (startTime) {
-      //startDate가 존재할때만 where 조건 생성
-      BasicCondition2 += ` AND DATE(inout_dtime) >= '${startTime}'`;
-    } else {
-      BasicCondition2 += ` AND DATE(inout_dtime) >= "1900-01-01 00:00:00"`;
-    }
+    // let BasicCondition2 = "";
 
-    if (endTime) {
-      //endDate가 존재할때만 where 조건 생성
-      BasicCondition2 += ` AND DATE(inout_dtime) <= '${endTime}'`;
-    } else {
-      BasicCondition2 += ` AND DATE(inout_dtime) <= "3000-12-31 00:00:00"`;
-    }
+    // if (startTime) {
+    //   //startDate가 존재할때만 where 조건 생성
+    //   BasicCondition2 += ` AND DATE(inout_dtime) >= '${startTime}'`;
+    // } else {
+    //   BasicCondition2 += ` AND DATE(inout_dtime) >= "1900-01-01 00:00:00"`;
+    // }
 
-    if (dongCode) {
-      // 동과 호는 개별 독립 조건
-      BasicCondition2 += ` AND dong_code = '${dongCode}'`;
-    }
+    // if (endTime) {
+    //   //endDate가 존재할때만 where 조건 생성
+    //   BasicCondition2 += ` AND DATE(inout_dtime) <= '${endTime}'`;
+    // } else {
+    //   BasicCondition2 += ` AND DATE(inout_dtime) <= "3000-12-31 00:00:00"`;
+    // }
 
-    if (hoCode) {
-      // 동과 호는 개별 독립 조건
-      BasicCondition2 += ` AND ho_code = '${hoCode}'`;
-    }
+    // if (dongCode) {
+    //   // 동과 호는 개별 독립 조건
+    //   BasicCondition2 += ` AND dong_code = '${dongCode}'`;
+    // }
 
-    if (sendResult) {
-      // 통신결과(세대알림) 개별 독립 조건
-      BasicCondition2 += ` AND send_result = '${_sendResult}'`;
-    }
+    // if (hoCode) {
+    //   // 동과 호는 개별 독립 조건
+    //   BasicCondition2 += ` AND ho_code = '${hoCode}'`;
+    // }
 
-    if (carNumber) {
-      // 차량번호 개별 독립 조건
-      BasicCondition2 += ` AND car_no ${carNo}`;
-    }
+    // if (sendResult) {
+    //   // 통신결과(세대알림) 개별 독립 조건
+    //   BasicCondition2 += ` AND send_result = '${_sendResult}'`;
+    // }
 
-    //조건문 취합
+    // if (carNumber) {
+    //   // 차량번호 개별 독립 조건
+    //   BasicCondition2 += ` AND car_no ${carNo}`;
+    // }
 
-    sql2 += BasicCondition2;
+    // //조건문 취합
+
+    // sql2 += BasicCondition2;
 
     console.log("sql2: " + sql2);
     const data2 = await pool.query(sql2);
@@ -174,7 +178,7 @@ router.get("/getCarIOList", async (req, res, next) => {
       ipp: size,
     };
     const data = await pool.query(sql, [Number(start), Number(end)]);
-
+    console.log("sql:" + sql);
     let list = data[0];
 
     let jsonResult = {
