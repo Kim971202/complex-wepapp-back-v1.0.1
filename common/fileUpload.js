@@ -60,4 +60,5 @@ module.exports = {
   checkUploadType,
   deleteFile,
   listDir,
+  upload,
 };

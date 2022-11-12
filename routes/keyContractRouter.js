@@ -107,6 +107,54 @@ router.get("/getKeyContract", async (req, res, next) => {
     return res.status(500).json(error);
   }
 });
+/****************************************************
+ * 주요 연락처 상세보기
+ ***************************************************/
+router.get("/getDetailedKeyContract/:idx", async (req, res, next) => {
+  let { idx = "" } = req.params;
+
+  console.log(idx);
+
+  try {
+    const detailsql = `SELECT idx as idx, ROW_NUMBER() OVER(ORDER BY idx) AS No, contact_flag AS contractFlag, 
+                              facility_name AS facilityName, phone_num AS phoneNum,
+                              DATE_FORMAT(insert_dtime, '%Y-%m-%d') AS insertDTime, memo AS memo
+                      FROM t_key_contact
+                      WHERE idx = ? `;
+
+    const data = await pool.query(detailsql, [idx]);
+
+    console.log("Detailsql: " + detailsql);
+
+    let contractFlag = "";
+    let facilityName = "";
+    let phoneNum = "";
+    let insertDTime = "";
+
+    resultList = data[0];
+
+    console.log("data[0] :" + data[0]);
+
+    if (resultList.length > 0) {
+      contractFlag = resultList[0].contractFlag;
+      facilityName = resultList[0].facilityName;
+      phoneNum = resultList[0].phoneNum;
+      memo = resultList[0].memo;
+    }
+    let jsonResult = {
+      resultCode: "00",
+      resultMsg: "NORMAL_SERVICE",
+      contractFlag,
+      facilityName,
+      phoneNum,
+      memo,
+    };
+
+    return res.json(jsonResult);
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+});
 
 /****************************************************
  * 주요 연락처 등록
@@ -160,7 +208,7 @@ router.post("/uploadKeyContract", async (req, res, next) => {
 
 router.patch("/updateKeyContract/:idx", async (req, res, next) => {
   let {
-    idx = 0,
+    idx = "",
     contractFlag = "",
     facilityName = "",
     phoneNum = "",
@@ -209,11 +257,11 @@ router.patch("/updateKeyContract/:idx", async (req, res, next) => {
  ***************************************************/
 
 router.delete("/deleteKeyContract/:idx", async (req, res, next) => {
-  let { idx = 0 } = req.params;
+  let { idx = "" } = req.params;
   console.log(idx);
 
   let resultCode = "00";
-  if (idx === 0) resultCode = "10";
+  if (idx === "") resultCode = "10";
 
   console.log("resultCode=> " + resultCode);
 

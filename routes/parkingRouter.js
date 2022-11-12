@@ -43,18 +43,16 @@ router.get("/getCarLocationList", async (req, res, next) => {
   let end_page = block;
 
   try {
-    let sql2 = `SELECT count(*) as cnt 
-                FROM t_parking_io 
+    let sql2 = `SELECT count(*) AS cnt 
+                FROM t_parking_loc 
                 WHERE 1=1 `;
 
     //조회문 생성
     let sql = `SELECT idx as idx, ROW_NUMBER() OVER(ORDER BY idx DESC) AS No, dong_code AS dongCode, ho_code AS hoCode, tag_name AS tagName,  
                       CONCAT(building_name, " ", floor_name, " ", pos_desc, ":", pos_x, ":", pos_y) AS parkingLocation, 
-                      DATE_FORMAT(pos_update_date, '%Y-%m-%d %h:%i:%s') as posUpdateDate
+                      DATE_FORMAT(pos_update_date, '%Y-%m-%d %h:%i:%s') AS posUpdateDate
                FROM t_parking_loc 
                WHERE 1=1 `;
-
-    console.log("sql: " + sql);
 
     //기존 조건 조회문 생성
     let BasicCondition = "";
@@ -62,31 +60,31 @@ router.get("/getCarLocationList", async (req, res, next) => {
 
     if (startTime) {
       //startDate가 존재할때만 where 조건 생성
-      BasicCondition += `AND DATE(pos_update_date) >= '${startTime}'`;
+      BasicCondition += `AND DATE(pos_update_date) >= '${startTime}' `;
     } else {
-      BasicCondition += `AND DATE(pos_update_date) >= "1900-01-01 00:00:00"`;
+      BasicCondition += `AND DATE(pos_update_date) >= '1900-01-01 00:00:00' `;
     }
 
     if (endTime) {
       //endDate가 존재할때만 where 조건 생성
       BasicCondition += `AND DATE(pos_update_date) <= '${endTime}'`;
     } else {
-      BasicCondition += `AND DATE(pos_update_date) <= "3000-12-31 00:00:00"`;
+      BasicCondition += `AND DATE(pos_update_date) <= '3000-12-31 00:00:00' `;
     }
 
     if (dongCode) {
       // 동과 호는 개별 독립 조건
-      BasicCondition += `AND dong_code = '${dongCode}'`;
+      BasicCondition += `AND dong_code = '${dongCode}' `;
     }
 
     if (hoCode) {
       // 동과 호는 개별 독립 조건
-      BasicCondition += `AND ho_code = '${hoCode}'`;
+      BasicCondition += `AND ho_code = '${hoCode}' `;
     }
     if (carNumber) {
       // 차량 번호는 개별 독립 조건
       // BasicCondition += `AND tag_name LIKE'%${carNumber}'`;
-      BasicCondition += `AND tag_name ${tagName}`;
+      BasicCondition += `AND tag_name ${tagName} `;
     }
 
     // BasicCondition += ` ORDER BY idx DESC LIMIT ?, ? `;
@@ -122,6 +120,7 @@ router.get("/getCarLocationList", async (req, res, next) => {
     };
     const data = await pool.query(sql, [Number(start), Number(end)]);
 
+    console.log("sql: " + sql);
     let list = data[0];
 
     let jsonResult = {

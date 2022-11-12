@@ -60,8 +60,6 @@ router.get("/getParkingResv", async (req, res, next) => {
                 FROM t_parking_resv
                 WHERE 1=1 `;
 
-    console.log("sql: " + sql);
-
     //기존 조건 조회문 생성
     let BasicCondition = "";
     let carNo = ` LIKE '%${carNumber}%'`;
@@ -133,6 +131,8 @@ router.get("/getParkingResv", async (req, res, next) => {
     };
 
     const data = await pool.query(sql, [Number(start), Number(end)]);
+
+    console.log("sql: " + sql);
 
     let list = data[0];
     let jsonResult = {

@@ -25,6 +25,11 @@ const noticeRoute = require("./routes/noticeRouter");
 
 const fileUploadRouter = require("./common/commonApi");
 // ********************************************************
+const emsRouter = require("./routes/emsRouter");
+const noticeRouter = require("./routes/noticeRouter");
+const voteRouter = require("./routes/voteRouter");
+const mngFeeRouter = require("./routes/mngFeeRouter");
+// ********************************************************
 
 const corsOptions = {
   origin: "http://localhost:8080", //허용할 도메인 설정
@@ -62,6 +67,11 @@ app.use("/visitCar", visitCarRoute);
 app.use("/contractDoc", contractDocRoute);
 app.use("/notice", noticeRoute);
 app.use("/fileUpload", fileUploadRouter);
+// ********************************************************
+app.use("/ems", emsRouter);
+app.use("/notice", noticeRouter);
+app.use("/vote", voteRouter);
+app.use("/mngFee", mngFeeRouter);
 // ********************************************************
 
 app.get("/", (req, res) => {
