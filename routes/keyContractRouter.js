@@ -116,7 +116,7 @@ router.get("/getDetailedKeyContract/:idx", async (req, res, next) => {
   console.log(idx);
 
   try {
-    const detailsql = `SELECT idx as idx, ROW_NUMBER() OVER(ORDER BY idx) AS No, contact_flag AS contractFlag, 
+    const detailsql = `SELECT idx AS idx, ROW_NUMBER() OVER(ORDER BY idx) AS No, contact_flag AS contractFlag, 
                               facility_name AS facilityName, phone_num AS phoneNum,
                               DATE_FORMAT(insert_dtime, '%Y-%m-%d') AS insertDTime, memo AS memo
                       FROM t_key_contact
@@ -257,18 +257,19 @@ router.patch("/updateKeyContract/:idx", async (req, res, next) => {
  ***************************************************/
 
 router.delete("/deleteKeyContract/:idx", async (req, res, next) => {
-  let { idx = "" } = req.params;
+  let { idx = 0 } = req.params;
   console.log(idx);
 
   let resultCode = "00";
-  if (idx === "") resultCode = "10";
+  if (idx === 0) resultCode = "10";
 
   console.log("resultCode=> " + resultCode);
 
   if (resultCode === "00") {
     try {
-      const sql = `DELETE FROM t_key_contact WHERE idx = ?`;
+      const sql = `DELETE FROM t_key_contact WHERE idx = ? `;
       console.log("sql: " + sql);
+
       const data = await pool.query(sql, [idx]);
 
       let jsonResult = {

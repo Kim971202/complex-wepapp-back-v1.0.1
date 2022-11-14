@@ -254,16 +254,20 @@ router.patch("/updateComplaint/:idx", async (req, res, next) => {
       let sql = "";
       if (_progressStatus == 0) {
         sql += `UPDATE t_application_complaint
-                           SET progress_status = ?, app_cancel_date = now()
-                           WHERE idx = ? `;
+                SET progress_status = ?, app_cancel_date = now(), app_complete_date = now()
+                WHERE idx = ? `;
+      } else if (_progressStatus == 1) {
+        sql += `UPDATE t_application_complaint
+                SET progress_status = ?, app_receipt_date = NULL, app_complete_date = NULL
+                WHERE idx = ? `;
       } else if (_progressStatus == 2) {
         sql += `UPDATE t_application_complaint
-                           SET progress_status = ?, app_receipt_date = now()
-                           WHERE idx = ? `;
+                SET progress_status = ?, app_receipt_date = now(), app_complete_date = NULL
+                WHERE idx = ? `;
       } else if (_progressStatus == 3) {
         sql += `UPDATE t_application_complaint
-                           SET progress_status = ?, app_complete_date = now()
-                           WHERE idx = ? `;
+                SET progress_status = ?, app_complete_date = now()
+                WHERE idx = ? `;
       }
 
       console.log("sql: " + sql);

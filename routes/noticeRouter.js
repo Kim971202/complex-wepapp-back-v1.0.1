@@ -134,23 +134,22 @@ router.get("/getNoticeList", async (req, res, next) => {
 
 // 공지사항 상세보기
 router.get("/getDetailedNoticeList/:idx", async (req, res, next) => {
-  let { serviceKey = "", idx = "" } = req.query;
-  console.log(serviceKey, idx);
+  let { idx = "" } = req.params;
+  console.log(idx);
 
   try {
-    const updateSQL = `UPDATE t_notice_send SET send_result = 'Y' WHERE idx = ?`;
-    const updateSQLData = await pool.query(updateSQL, [idx]);
-    console.log("updateSQLData: " + updateSQLData);
+    // const updateSQL = `UPDATE t_notice_send SET send_result = 'Y' WHERE idx = ?`;
+    // const updateSQLData = await pool.query(updateSQL, [idx]);
+    // console.log("updateSQLData: " + updateSQLData);
 
-    const sql = `SELECT a.noti_title AS notiTitle, a.noti_content AS notiContent, 
+    let sql = `SELECT a.noti_title AS notiTitle, a.noti_content AS notiContent, 
                           DATE_FORMAT(a.start_date, '%Y-%m-%dT%h:%m') AS startDate, 
                           DATE_FORMAT(a.end_date, '%Y-%m-%dT%h:%m ') AS endDate, 
                           b.send_result AS sendResult, a.noti_type AS notiType,
-                          a.file_name AS fileName
+                          a.file_name AS fileName 
                    FROM t_notice a
                    INNER JOIN t_notice_send b
-                   WHERE a.idx = b.idx AND a.idx = ? 
-                   LIMIT 1`;
+                   WHERE a.idx = b.idx AND a.idx = ? `;
     const data = await pool.query(sql, [idx]);
     console.log("sql: " + sql);
     let resultList = data[0];
@@ -175,6 +174,82 @@ router.get("/getDetailedNoticeList/:idx", async (req, res, next) => {
       sendResult,
       notiType,
       fileName,
+    };
+    // console.log(jsonResult);
+    return res.json(jsonResult);
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+});
+
+// 공지사항 확인 상세보기
+router.get("/getNoticeCheckList/:idx", async (req, res, next) => {
+  let {
+    size = 10, // 페이지 당 결과수
+    page = 1, // 페이지 번호
+    idx = "",
+  } = req.params;
+  console.log("=====공지사항 idx=====");
+  console.log(size, page, idx);
+
+  let totalCount = 0;
+  let block = 10;
+  let total_page = 0;
+  let start = 0;
+  let end = size;
+  let start_page = 1;
+  let end_page = block;
+
+  try {
+    // let sql2 = `SELECT count(*) AS cnt
+    //              FROM t_notice_send a
+    //              INNER JOIN t_notice b
+    //              WHERE a.idx = b.idx AND b.idx = ? `;
+
+    // console.log("sql2: " + sql2);
+
+    //조회문 생성
+    let sql = `SELECT a.idx AS idx, ROW_NUMBER() OVER(ORDER BY idx) AS No, a.dong_code AS dongCode, a.ho_code AS hoCode,
+                          a.send_result AS sendResult, a.send_time AS sendTime
+                 FROM t_notice_send a
+                 INNER JOIN t_notice b
+                 WHERE a.idx = b.idx AND b.idx = ? `;
+
+    console.log("sql: " + sql);
+
+    // const data2 = await pool.query(sql2);
+
+    // console.log(data2);
+
+    // totalCount = data2[0][0].cnt; //총 게시글 수
+    // total_page = Math.ceil(totalCount / size); //총 페이지 수
+
+    // start = (page - 1) * size; //시작행
+    // start_page = page - ((page - 1) % block);
+    // end_page = start_page + block - 1;
+
+    // console.log("start=%d", start);
+    // console.log("end=%d", end);
+    // if (total_page < end_page) end_page = total_page;
+
+    // let paging = {
+    //   totalCount,
+    //   total_page,
+    //   page,
+    //   start_page,
+    //   end_page,
+    //   ipp: size,
+    // };
+
+    // const data = await pool.query(sql, [Number(start), Number(end)]);
+    const data = await pool.query(sql, [idx]);
+
+    let list = data[0];
+
+    let jsonResult = {
+      resultCode: "00",
+      list: list,
+      // paging: paging,
     };
     console.log(jsonResult);
     return res.json(jsonResult);
